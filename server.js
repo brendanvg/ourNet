@@ -1,8 +1,19 @@
 var express = require('express');
 var passport = require('passport');
 var Strategy = require('passport-local').Strategy;
+/*var leveldown = require('leveldown')
+*/var levelup = require('levelup')
 var db = require('./db');
+var dbUsers= levelup('./dbUsers')
+var bodyParser = require('body-parser')
+var body = require('body/any')
 
+/*app.use(express.bodyParser())
+app.use(express.bodyParser({
+  extended:true
+}))
+app.use(express.json())
+app.use(express.urlencoded())*/
 
 // Configure the local strategy for use by Passport.
 //
@@ -12,13 +23,29 @@ var db = require('./db');
 // will be set at `req.user` in route handlers after authentication.
 passport.use(new Strategy(
   function(username, password, cb) {
-    db.users.findByUsername(username, function(err, user) {
+    dbUsers.get(username, function(err,value){
+      if (err) {
+        console.log('uhohhhh it aint workin')
+        return cb(null,false, {message:'Incorrect Username.'})
+      }
+      else {
+        if (value.password === password){
+          return cb(null, value)
+        }
+        else {
+          return cb(null,false,{message:'Incorrect Password'})
+        }
+      }
+    })
+
+    /*db.users.findByUsername(username, function(err, user) {
       if (err) { return cb(err); }
-      if (!user) { return cb(null, false); }
+      if (!user) { return cb(null, false, {message:'Incorrect username'}); }
       if (user.password != password) { return cb(null, false); }
       return cb(null, user);
-    });
-  }));
+    });*/
+  }
+));
 
 
 // Configure Passport authenticated session persistence.
@@ -69,12 +96,48 @@ app.get('/',
 
 app.get('/login',
   function(req, res){
-    res.render('login');
-  });
+    var message = ''
+
+    res.render('login', {message:message});
+  }
+)
+
+app.get('/signUp', function (req,res){
+  res.render('signUp')
+})
+
+app.post('/signUp', function(req,res){
+  console.log('ohhhhh!')
+  body(req,res,function(err,params){
+  console.log('doinnnn something')
+  var username= req.body.username
+  console.log('worked', username)
+  var body = {
+    username: req.body.username,
+    password: req.body.password,
+    email: req.body.email
+  }
+  dbUsers.put(username, body, function(err){
+    if(err){console.log(err)}
+  })
+  res.end()
+  })
+})
   
+app.get('/loginAgain', function(req, res){
+    var message = 'Login Failed, Try Again...'
+    res.render('login', {
+      message:message
+    });
+  });
+
+console.log('server listening on port 3000')
+
 app.post('/login', 
-  passport.authenticate('local', { failureRedirect: '/login' }),
+  passport.authenticate('local', { failureRedirect: '/loginAgain' }),
   function(req, res) {
+    console.log('realllllly')
+
     res.redirect('/');
   });
   
