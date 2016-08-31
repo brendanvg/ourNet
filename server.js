@@ -8,6 +8,8 @@ var dbUsers= levelup('./dbUsers')
 var bodyParser = require('body-parser')
 var serveStatic= require('serve-static')
 var serve = serveStatic('public')
+var collect = require('collect-stream')
+
 //var body = require('body/any')
 
 /*app.use(express.bodyParser())
@@ -90,6 +92,17 @@ app.use(require('express-session')({ secret: 'keyboard cat', resave: false, save
 app.use(passport.initialize());
 app.use(passport.session());
 
+
+
+app.get('/checkDb', function(req,res){
+  console.log('yuppp')
+  var stream = dbUsers.createReadStream()
+  collect(stream, (err,data) => {
+    res.writeHead(200, {'content-type':'application/JSON'})
+    res.end(JSON.stringify(data))
+  })
+  
+})
 // Define routes.
 app.get('/',
   function(req, res) {
