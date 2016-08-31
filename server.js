@@ -6,7 +6,9 @@ var Strategy = require('passport-local').Strategy;
 var db = require('./db');
 var dbUsers= levelup('./dbUsers')
 var bodyParser = require('body-parser')
-var body = require('body/any')
+var serveStatic= require('serve-static')
+var serve = serveStatic('public')
+//var body = require('body/any')
 
 /*app.use(express.bodyParser())
 app.use(express.bodyParser({
@@ -102,13 +104,23 @@ app.get('/login',
   }
 )
 
+function test () {
+  console.log('wait one second!')
+}
+
+app.get('/login.html', function(req,res){
+  test()
+  serve(req,res)
+})
+
 app.get('/signUp', function (req,res){
   res.render('signUp')
 })
 
 app.post('/signUp', function(req,res){
   console.log('ohhhhh!')
-  body(req,res,function(err,params){
+/*  body(req,res,function(err,params){
+*/  
   console.log('doinnnn something')
   var username= req.body.username
   console.log('worked', username)
@@ -120,8 +132,11 @@ app.post('/signUp', function(req,res){
   dbUsers.put(username, body, function(err){
     if(err){console.log(err)}
   })
-  res.end()
-  })
+  res.render('login', {
+      message:' '
+  });
+/*  })
+*/
 })
   
 app.get('/loginAgain', function(req, res){
@@ -154,3 +169,4 @@ app.get('/profile',
   });
 
 app.listen(3000);
+app.use(express.static('public'))
